@@ -13,12 +13,18 @@ public class Player : MonoBehaviour {
 	void Start ()
     {
         charController = GetComponent<CharacterController>();
+        Cursor.visible = false;
 	}
 	
 	// Update is called once per frame
 	void Update ()
     {
         CalculateMovement();
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Cursor.visible = true;
+        }
     }
 
     void CalculateMovement()
