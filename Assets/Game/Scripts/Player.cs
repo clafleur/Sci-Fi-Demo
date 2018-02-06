@@ -13,14 +13,27 @@ public class Player : MonoBehaviour {
     private GameObject hitMarkerPrefab;
     [SerializeField]
     private AudioSource weaponAudio;
+    [SerializeField]
+    private int currentAmmo;
+    [SerializeField]
+    private int maxAmmo = 50;
+
+    private bool isReloading = false;
 
     private CharacterController charController;
+    private UIManager uiManager;
+
+    public bool hasCoin = false;
+
 	// Use this for initialization
 	void Start ()
     {
         charController = GetComponent<CharacterController>();
+        uiManager = GameObject.Find("Canvas").GetComponent<UIManager>();
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+
+        currentAmmo = maxAmmo;
 	}
 	
 	// Update is called once per frame
@@ -32,8 +45,23 @@ public class Player : MonoBehaviour {
             Cursor.lockState = CursorLockMode.None;
         }
 
+        if (Input.GetMouseButton(0) && currentAmmo > 0)
+        {
+            PlayerShot();
+        }
+        else
+        {
+            muzzelFlash.SetActive(false);
+            weaponAudio.Stop();
+        }
+
+        if (Input.GetKeyDown(KeyCode.R) && isReloading == false)
+        {
+            isReloading = true;
+            StartCoroutine(ReloadWeaponRoutine());
+        }
+
         CalculateMovement();
-        PlayerShot();
     }
 
     void CalculateMovement()
@@ -51,26 +79,32 @@ public class Player : MonoBehaviour {
 
     void PlayerShot()
     {
-        if (Input.GetMouseButton(0))
+        muzzelFlash.SetActive(true);
+        currentAmmo--;
+        uiManager.UpdateAmmo(currentAmmo);
+        if (!weaponAudio.isPlaying)
         {
-            muzzelFlash.SetActive(true);
-            if (!weaponAudio.isPlaying)
-            {
-                weaponAudio.Play();
-            }
-            Ray rayOrgin = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-            RaycastHit hitInfo;
-            if (Physics.Raycast(rayOrgin, out hitInfo))
-            {
-                Debug.Log("Raycast hit something " + hitInfo.transform.name);
-                GameObject hitMarker = Instantiate(hitMarkerPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal)) as GameObject;
-                Destroy(hitMarker, 1.0f);
-            }
+            weaponAudio.Play();
         }
-        else
+
+        Ray rayOrgin = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        RaycastHit hitInfo;
+
+        if (Physics.Raycast(rayOrgin, out hitInfo))
         {
-            muzzelFlash.SetActive(false);
-            weaponAudio.Stop();
+            Debug.Log("Raycast hit something " + hitInfo.transform.name);
+            GameObject hitMarker = Instantiate(hitMarkerPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal)) as GameObject;
+            Destroy(hitMarker, 1.0f);
         }
     }
+
+    public IEnumerator ReloadWeaponRoutine()
+    {
+        yield return new WaitForSeconds(1.5f);
+        currentAmmo = maxAmmo;
+        uiManager.UpdateAmmo(currentAmmo);
+        isReloading = false;
+    }
+
+
 }
