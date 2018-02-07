@@ -17,6 +17,8 @@ public class Player : MonoBehaviour {
     private int currentAmmo;
     [SerializeField]
     private int maxAmmo = 50;
+    [SerializeField]
+    private GameObject weapon;
 
     private bool isReloading = false;
 
@@ -95,7 +97,18 @@ public class Player : MonoBehaviour {
             Debug.Log("Raycast hit something " + hitInfo.transform.name);
             GameObject hitMarker = Instantiate(hitMarkerPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal)) as GameObject;
             Destroy(hitMarker, 1.0f);
+
+            Destructable crate = hitInfo.transform.GetComponent<Destructable>();
+            if (crate != null)
+            {
+                crate.DestroyCrate();
+            }
         }
+    }
+
+    public void EnableWeapons()
+    {
+        weapon.SetActive(true);
     }
 
     public IEnumerator ReloadWeaponRoutine()
